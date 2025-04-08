@@ -1,4 +1,5 @@
 # pet_project_1
 
 multiuser noise image generator for Windows OS
-using C++, SQL, regex, WINsocket, Google Tests(gtests), CMake, Make
+client-server architecture
+using C++, SQL, regex, WINsocket, Google Tests(gtests), CMake, Make, threads
