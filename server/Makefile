@@ -2,10 +2,10 @@ CXX = g++
 CXXFLAGS = -std=c++20 -Wall -W -Werror
 LDFLAGS = -pthread
 
-program: image.o myNoiseGeneratorServer.o
+program: color.o myNoiseGeneratorServer.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
-image.o: src/source/image.cpp
+color.o: src/source/color.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 myNoiseGeneratorServer.o: src/myNoiseGeneratorServer.cpp
