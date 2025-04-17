@@ -7,3 +7,18 @@ Color::Color(int _red, int _green, int _blue):
 
     }
 
+int Color::getRed() const{
+    return red;
+}
+
+int Color::getGreen() const{
+    return green;
+}
+
+int Color::getBlue() const{
+    return blue;
+}
+
+Color::~Color() {
+
+}

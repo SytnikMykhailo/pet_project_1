@@ -1,4 +1,7 @@
 #include "BMPimage.hpp"
+#include "JPEGimage.hpp"
+#include "PNGimage.hpp"
+#include <stdexcept>
 
 class ImageLoader{
     static std::unique_ptr<Image> load(const std::string &path);
