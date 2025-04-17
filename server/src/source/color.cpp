@@ -1,21 +1,21 @@
 #include "../headers/color.hpp"
 
 
-Color::Color(int _red, int _green, int _blue): 
+Color::Color(uint8_t _red, uint8_t _green, uint8_t _blue): 
     red{_red}, green{_green}, blue{_blue}
     {
 
     }
 
-int Color::getRed() const{
+uint8_t Color::getRed() const{
     return red;
 }
 
-int Color::getGreen() const{
+uint8_t Color::getGreen() const{
     return green;
 }
 
-int Color::getBlue() const{
+uint8_t Color::getBlue() const{
     return blue;
 }
 

@@ -1,14 +1,16 @@
+#include <cstdint>
+
 class Color{
     public:
         Color() = default;
-        Color(int red, int green, int blue);
+        Color(uint8_t red, uint8_t green, uint8_t blue);
         ~Color();
     public:
-        int getRed() const;
-        int getGreen() const;
-        int getBlue() const;
+        uint8_t getRed() const;
+        uint8_t getGreen() const;
+        uint8_t getBlue() const;
     private:
-        int red = 255;
-        int green = 255;
-        int blue = 255;
+        uint8_t red = 0;
+        uint8_t green = 0;
+        uint8_t blue = 0;
 };

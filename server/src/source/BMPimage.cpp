@@ -1,6 +1,6 @@
 #include "../headers/BMPimage.hpp"
 
-BMPImage::BMPImage(int _height, int _width):
+BMPImage::BMPImage(uint8_t _height, uint8_t _width):
     height{_height}, width{_width}
 {
     pixels.resize(width * height);

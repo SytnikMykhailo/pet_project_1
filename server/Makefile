@@ -5,7 +5,7 @@ LDFLAGS = -pthread
 program: color.o myNoiseGeneratorServer.o imageloader.o BMPImage.o JPEGImage.o PNGImage.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
-color.o: src/source/color.cpp
+color.o: src/source/color.cpp src/headers/color.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 myNoiseGeneratorServer.o: src/myNoiseGeneratorServer.cpp
@@ -24,4 +24,4 @@ imageloader.o: src/source/imageloader.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	del /Q *.o program.exe 2>nul
+	del /Q *.o program.exe 2>nul || exit 0

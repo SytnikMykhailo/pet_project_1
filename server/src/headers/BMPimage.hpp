@@ -31,7 +31,7 @@ struct BMPInfoHeader {
 class BMPImage: public Image{
     public:
         BMPIMage() = delete;
-        BMPImage(int _height, int _width);
+        BMPImage(uint8_t _height, uint8_t _width);
         ~BMPImage();
     private:
         int height;
