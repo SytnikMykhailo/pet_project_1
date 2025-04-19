@@ -1,5 +1,6 @@
 #include "../headers/PNGimage.hpp"
 
+
 std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image){
     std::cout << path_to_image << std::endl;
     return nullptr;
@@ -26,4 +27,10 @@ PNGImage::PNGImage(int _height, int _width):
     height{_height}, width{_width}
 {
     pixels.resize(width * height);
+}
+
+uint32_t readBigEndianUint32(std::istream& stream) {
+    uint8_t bytes[4];
+    stream.read(reinterpret_cast<char*>(bytes), 4);
+    return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
 }
