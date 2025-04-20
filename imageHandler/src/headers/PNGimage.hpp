@@ -52,7 +52,6 @@ class PNGImage: public Image{
     private:
         int height;
         int width;
-       
         std::vector<Color> pixels; 
     public:
         void setPixelColor(Color new_color, int pos_x, int pos_y) override;

@@ -18,16 +18,16 @@ color.o: src/source/color.cpp src/headers/color.hpp
 myNoiseGeneratorImageHandler.o: src/myNoiseGeneratorImageHandler.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-BMPImage.o: src/source/BMPImage.cpp
+BMPImage.o: src/source/BMPImage.cpp src/headers/BMPImage.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-PNGImage.o: src/source/PNGImage.cpp
+PNGImage.o: src/source/PNGImage.cpp src/headers/PNGImage.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-JPEGImage.o: src/source/JPEGImage.cpp
+JPEGImage.o: src/source/JPEGImage.cpp src/headers/JPEGImage.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-imageloader.o: src/source/imageloader.cpp
+imageloader.o: src/source/imageloader.cpp src/headers/imageloader.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
