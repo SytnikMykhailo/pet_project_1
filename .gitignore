@@ -1,5 +1,6 @@
-.o 
-.exe
+*.o 
+*.exe
+output.txt
 output/
 build/
 zlib/
