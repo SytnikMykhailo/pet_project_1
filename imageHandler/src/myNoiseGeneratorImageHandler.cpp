@@ -2,26 +2,22 @@
 #include <string>
 #include <zlib.h>
 #include <vector>
+#include "headers/PNGimage.hpp"
+#include "headers/imageloader.hpp"
+
 
 int main() {
     std::cout << "Program started!" << std::endl;
-    std::cout.flush();
-    const std::string original = "Hello, Zlib! Zlib is great!";
-    std::cout << "Original text: " << original << std::endl;
+    std::unique_ptr<Image> image = ImageLoader::load("../output/png1.png");
 
-    uLong sourceLen = original.size();
-    uLong destLen = compressBound(sourceLen);
-    std::vector<Bytef> compressed(destLen);
 
-    int compressionStatus = compress(compressed.data(), &destLen, 
-                                     reinterpret_cast<const Bytef*>(original.data()), sourceLen);
-    std::cerr << "Compression status: " << compressionStatus << ", Compressed size: " << destLen << std::endl;
-
-    if (compressionStatus != Z_OK) {
-        std::cerr << "Compression failed.\n";
-        return 1;
+    for(int row = 0; row < 54; row++){
+        for(int col = 0; col < 45; col++){
+            image->setPixelColor(Color(23, 34, 234, 255), col, row);
+        }
     }
 
+    image->save("../output/png1.png");
     
 
     return 0;

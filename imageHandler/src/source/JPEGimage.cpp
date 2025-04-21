@@ -6,12 +6,20 @@ std::unique_ptr<Image> JPEGImage::load(const std::string &path_to_image){
 }
 
 void JPEGImage::setPixelColor(Color new_color, int pos_x, int pos_y) {
-    std::cout << pos_x << pos_y << new_color.getRed() <<  std::endl;
+    if (pos_x >= 0 && pos_x < width && pos_y >= 0 && pos_y < height) {
+        pixels[pos_y * width + pos_x] = new_color;
+    } else {
+        std::cerr << "setPixelColor: position out of bounds\n";
+    }
 }
 
 Color JPEGImage::getPixelColor(int pos_x, int pos_y) const {
-    std::cout << pos_x << pos_y <<  std::endl;
-    return Color();
+    if (pos_x >= 0 && pos_x < width && pos_y >= 0 && pos_y < height) {
+        return pixels[pos_y * width + pos_x];
+    } else {
+        std::cerr << "getPixelColor: position out of bounds\n";
+        return Color();
+    }
 }
 
 void JPEGImage::save(const std::string &path_to_folder) const {

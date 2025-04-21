@@ -2,7 +2,11 @@
 #include <zlib.h>
 #include <stdexcept>
 #include <cstring>
-#include "PNGImage.hpp"
+#include "../headers/PNGimage.hpp"
+#include <winsock2.h>
+
+void unfilterScanlines(std::vector<uint8_t>& image_data, uint32_t width, uint32_t height, int bpp);
+uint8_t paethPredictor(uint8_t a, uint8_t b, uint8_t c);
 
 void unfilterScanlines(std::vector<uint8_t>& image_data, uint32_t width, uint32_t height, int bpp) {
     const int stride = width * bpp;
@@ -61,6 +65,7 @@ uint8_t paethPredictor(uint8_t a, uint8_t b, uint8_t c) {
 }
 
 std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image) {
+    std::cout << "loading file " << path_to_image << " stared!" << std::endl;
     std::ifstream in(path_to_image, std::ios::binary);
     if (!in) {
         std::cerr << "Failed to open image: " << path_to_image << std::endl;
@@ -76,8 +81,8 @@ std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image) {
 
     PNGChunk chunk;
     std::vector<uint8_t> image_data;
-    uint32_t width, height, bit_depth, color_type;
-
+    uint32_t width, height;
+    std::cout << "loading file " << path_to_image << " continuing" << std::endl;
     while (in.read(reinterpret_cast<char*>(&chunk.length), sizeof(chunk.length))) {
         in.read(chunk.type, sizeof(chunk.type));
         chunk.setTypeNullTerminated();
@@ -88,8 +93,6 @@ std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image) {
             std::memcpy(&ihdr, chunk.data, sizeof(PNGIHDR));
             width = ihdr.width;
             height = ihdr.height;
-            bit_depth = ihdr.bit_depth;
-            color_type = ihdr.color_type;
 
             image_data.resize(width * height * 4);
 
@@ -116,9 +119,9 @@ std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image) {
         }
     }
     in.close();
-
+    std::cout << "loading file " << path_to_image << " continuing" << std::endl;
     unfilterScanlines(image_data, width, height, 4);
-
+    
     auto png_image = std::make_unique<PNGImage>(height, width);
     for (uint32_t y = 0; y < height; ++y) {
         for (uint32_t x = 0; x < width; ++x) {
@@ -151,8 +154,89 @@ Color PNGImage::getPixelColor(int pos_x, int pos_y) const {
     }
 }
 
-void PNGImage::save(const std::string &path_to_folder) const {
-    std::cout << path_to_folder << std::endl;
+void PNGImage::save(const std::string &path_to_file) const {
+    std::ofstream out(path_to_file, std::ios::binary);
+    if (!out) {
+        std::cerr << "Failed to open file for writing: " << path_to_file << std::endl;
+        return;
+    }
+
+    // PNG Signature
+    uint8_t signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+    out.write(reinterpret_cast<char*>(signature), sizeof(signature));
+
+    // Prepare IHDR chunk
+    PNGIHDR ihdr;
+    ihdr.width = htonl(width);
+    ihdr.height = htonl(height);
+    ihdr.bit_depth = 8;
+    ihdr.color_type = 6;  // RGBA
+    ihdr.compression_method = 0;
+    ihdr.filter_method = 0;
+    ihdr.interlace_method = 0;
+
+    uint32_t ihdr_data_len = sizeof(PNGIHDR);
+    uint32_t ihdr_len_be = htonl(ihdr_data_len);
+    out.write(reinterpret_cast<char*>(&ihdr_len_be), sizeof(ihdr_len_be));
+
+    const char ihdr_type[] = "IHDR";
+    out.write(ihdr_type, 4);
+    out.write(reinterpret_cast<char*>(&ihdr), ihdr_data_len);
+
+    uint32_t ihdr_crc = crc32(0L, Z_NULL, 0);
+    ihdr_crc = crc32(ihdr_crc, reinterpret_cast<const Bytef*>(ihdr_type), 4);
+    ihdr_crc = crc32(ihdr_crc, reinterpret_cast<const Bytef*>(&ihdr), ihdr_data_len);
+    uint32_t ihdr_crc_be = htonl(ihdr_crc);
+    out.write(reinterpret_cast<char*>(&ihdr_crc_be), sizeof(ihdr_crc_be));
+
+    // Prepare raw image data with filter bytes
+    std::vector<uint8_t> raw_data;
+    for (int y = 0; y < height; ++y) {
+        raw_data.push_back(0); // No filter
+        for (int x = 0; x < width; ++x) {
+            const Color& c = pixels[y * width + x];
+            raw_data.push_back(c.getRed());
+            raw_data.push_back(c.getGreen());
+            raw_data.push_back(c.getBlue());
+            raw_data.push_back(c.getAlpha());
+        }
+    }
+
+    // Compress image data
+    uLongf compressed_size = compressBound(raw_data.size());
+    std::vector<uint8_t> compressed_data(compressed_size);
+    if (compress(compressed_data.data(), &compressed_size, raw_data.data(), raw_data.size()) != Z_OK) {
+        std::cerr << "Compression failed.\n";
+        return;
+    }
+
+    uint32_t idat_len_be = htonl(static_cast<uint32_t>(compressed_size));
+    out.write(reinterpret_cast<char*>(&idat_len_be), sizeof(idat_len_be));
+
+    const char idat_type[] = "IDAT";
+    out.write(idat_type, 4);
+    out.write(reinterpret_cast<char*>(compressed_data.data()), compressed_size);
+
+    uint32_t idat_crc = crc32(0L, Z_NULL, 0);
+    idat_crc = crc32(idat_crc, reinterpret_cast<const Bytef*>(idat_type), 4);
+    idat_crc = crc32(idat_crc, compressed_data.data(), compressed_size);
+    uint32_t idat_crc_be = htonl(idat_crc);
+    out.write(reinterpret_cast<char*>(&idat_crc_be), sizeof(idat_crc_be));
+
+    // IEND chunk
+    uint32_t iend_len_be = htonl(0);
+    out.write(reinterpret_cast<char*>(&iend_len_be), sizeof(iend_len_be));
+
+    const char iend_type[] = "IEND";
+    out.write(iend_type, 4);
+
+    uint32_t iend_crc = crc32(0L, Z_NULL, 0);
+    iend_crc = crc32(iend_crc, reinterpret_cast<const Bytef*>(iend_type), 4);
+    uint32_t iend_crc_be = htonl(iend_crc);
+    out.write(reinterpret_cast<char*>(&iend_crc_be), sizeof(iend_crc_be));
+
+    out.close();
+    std::cout << "Saved PNG image to " << path_to_file << std::endl;
 }
 
 PNGImage::~PNGImage(){
@@ -163,10 +247,4 @@ PNGImage::PNGImage(int _height, int _width):
     height{_height}, width{_width}
 {
     pixels.resize(width * height);
-}
-
-uint32_t readBigEndianUint32(std::istream& stream) {
-    uint8_t bytes[4];
-    stream.read(reinterpret_cast<char*>(bytes), 4);
-    return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
 }

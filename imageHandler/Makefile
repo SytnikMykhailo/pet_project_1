@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Wall -W -Werror -Iexternal_libraries/zlib/include
-LDFLAGS = -pthread -mconsole -L./external_libraries/zlib/lib -lzlib
+LDFLAGS = -pthread -mconsole -L./external_libraries/zlib/lib -lzlib -lws2_32
 
 ifeq ($(OS),Windows_NT)
     COPY_DLL = copy external_libraries\\zlib\\bin\\libzlib.dll .\\ >nul
