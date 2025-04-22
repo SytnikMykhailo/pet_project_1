@@ -16,7 +16,7 @@ typedef struct {
 typedef struct {
     uint32_t length;      
     char type[5];         
-    uint8_t* data;        
+    std::vector<uint8_t> data;      
     uint32_t crc;  
 
     void setTypeNullTerminated() {

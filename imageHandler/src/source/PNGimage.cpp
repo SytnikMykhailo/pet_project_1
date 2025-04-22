@@ -8,46 +8,48 @@
 void unfilterScanlines(std::vector<uint8_t>& image_data, uint32_t width, uint32_t height, int bpp);
 uint8_t paethPredictor(uint8_t a, uint8_t b, uint8_t c);
 
-void unfilterScanlines(std::vector<uint8_t>& image_data, uint32_t width, uint32_t height, int bpp) {
+void unfilterScanlines(std::vector<uint8_t>& data, uint32_t width, uint32_t height, int bpp) {
     const int stride = width * bpp;
 
     for (uint32_t y = 0; y < height; ++y) {
-        uint8_t* row = &image_data[y * (stride + 1)];
+        std::cout << "unfilterScanlines" << std::endl;
+        uint8_t* row = &data[y * (stride + 1)];
         uint8_t filter_type = row[0];
         uint8_t* curr = row + 1;
-        uint8_t* prev = y == 0 ? nullptr : &image_data[(y - 1) * (stride + 1) + 1];
-
+        uint8_t* prev = y == 0 ? nullptr : &data[(y - 1) * (stride + 1) + 1];
+        std::cout << filter_type << std::endl;
         switch (filter_type) {
-            case 0: break;
-
-            case 1:
-                for (int i = bpp; i < stride; ++i)
-                    curr[i] += curr[i - bpp];
+            case 0:
+                std::cout << "case 0" << std::endl;
                 break;
-
+            case 1:
+                std::cout << "case 1" << std::endl;
+                for (int i = bpp; i < stride; ++i)
+                    curr[i] = static_cast<uint8_t>(int(curr[i]) + int(curr[i - bpp]));
+                break;
             case 2:
+                std::cout << "case 2" << std::endl;
                 if (!prev) break;
                 for (int i = 0; i < stride; ++i)
-                    curr[i] += prev[i];
+                    curr[i] = static_cast<uint8_t>(int(curr[i]) + int(prev[i]));
                 break;
-
             case 3:
+                std::cout << "case 3" << std::endl;
                 for (int i = 0; i < stride; ++i) {
-                    uint8_t left = (i >= bpp) ? curr[i - bpp] : 0;
-                    uint8_t above = (prev) ? prev[i] : 0;
-                    curr[i] += (left + above) / 2;
+                    int left = (i >= bpp) ? int(curr[i - bpp]) : 0;
+                    int above = (prev) ? int(prev[i]) : 0;
+                    curr[i] = static_cast<uint8_t>(int(curr[i]) + ((left + above) / 2));
                 }
                 break;
-
             case 4:
+                std::cout << "case 4" << std::endl;
                 for (int i = 0; i < stride; ++i) {
-                    uint8_t left = (i >= bpp) ? curr[i - bpp] : 0;
-                    uint8_t above = (prev) ? prev[i] : 0;
-                    uint8_t upper_left = (prev && i >= bpp) ? prev[i - bpp] : 0;
-                    curr[i] += paethPredictor(left, above, upper_left);
+                    int left = (i >= bpp) ? int(curr[i - bpp]) : 0;
+                    int above = (prev) ? int(prev[i]) : 0;
+                    int upper_left = (prev && i >= bpp) ? int(prev[i - bpp]) : 0;
+                    curr[i] = static_cast<uint8_t>(int(curr[i]) + paethPredictor(left, above, upper_left));
                 }
                 break;
-
             default:
                 throw std::runtime_error("Unknown PNG filter type");
         }
@@ -83,52 +85,74 @@ std::unique_ptr<Image> PNGImage::load(const std::string &path_to_image) {
     std::vector<uint8_t> image_data;
     uint32_t width, height;
     std::cout << "loading file " << path_to_image << " continuing" << std::endl;
+    std::vector<uint8_t> compressed_data;
     while (in.read(reinterpret_cast<char*>(&chunk.length), sizeof(chunk.length))) {
-        in.read(chunk.type, sizeof(chunk.type));
+        chunk.length = htonl(chunk.length);
+        std::cout << "aboba" << std::endl;
+        in.read(chunk.type, sizeof(chunk.type) - 1);
         chunk.setTypeNullTerminated();
 
+        std::cout << "aboba" << std::endl;
         if (std::string(chunk.type) == "IHDR") {
-            in.read(reinterpret_cast<char*>(&chunk.data), chunk.length);
+            std::cout << "IHDR" << std::endl;
+            chunk.data.resize(chunk.length);
+            in.read(reinterpret_cast<char*>(chunk.data.data()), chunk.length);
+            std::cout << "IHDR" << chunk.length << std::endl;
             PNGIHDR ihdr;
-            std::memcpy(&ihdr, chunk.data, sizeof(PNGIHDR));
-            width = ihdr.width;
-            height = ihdr.height;
-
+            
+            if (chunk.data.size() < sizeof(PNGIHDR)) {
+                std::cerr << "chunk.length is too small!" << std::endl;
+                return nullptr;
+            }
+            std::cout << "IHDR" << sizeof(ihdr) << "asdf" << sizeof(chunk.data) << std::endl;
+            std::memcpy(&ihdr, chunk.data.data(), sizeof(PNGIHDR));
+            std::cout << "IHDR" << std::endl;
+            width = htonl(ihdr.width);
+            height = htonl(ihdr.height);
+            std::cout << "IHDR" << std::endl;
             image_data.resize(width * height * 4);
 
             in.ignore(4);
+            std::cout << "aboba" << std::endl;
         } else if (std::string(chunk.type) == "IDAT") {
-            std::vector<uint8_t> compressed_data(chunk.length);
-            in.read(reinterpret_cast<char*>(compressed_data.data()), chunk.length);
-
-            uLongf decompressed_size = width * height * 4;
-            std::vector<uint8_t> decompressed_data(decompressed_size);
-
-            int result = uncompress(decompressed_data.data(), &decompressed_size, compressed_data.data(), chunk.length);
-            if (result != Z_OK) {
-                std::cerr << "Failed to decompress IDAT chunk.\n";
-                return nullptr;
-            }
-
-            image_data.insert(image_data.end(), decompressed_data.begin(), decompressed_data.end());
+            std::vector<uint8_t> part(chunk.length);
+            in.read(reinterpret_cast<char*>(part.data()), chunk.length);
+            compressed_data.insert(compressed_data.end(), part.begin(), part.end());
         } else {
+            std::cout << "aboba" << std::endl;
             in.ignore(chunk.length + 4);
         }
+        std::cout << "aboba" << std::endl;
         if (std::string(chunk.type) == "IEND") {
+            std::cout << "aboba" << std::endl;
             break;
         }
     }
+    uLongf decompressed_size = (width * 4 + 1) * height; 
+    std::vector<uint8_t> decompressed_data(decompressed_size);
+
+    int result = uncompress(decompressed_data.data(), &decompressed_size,
+                            compressed_data.data(), compressed_data.size());
+
+    if (result != Z_OK) {
+        std::cerr << "Failed to decompress combined IDAT data. Error code: " << result << std::endl;
+        return nullptr;
+    }
     in.close();
+    std::cout << "Compressed data size: " << compressed_data.size() << std::endl;
+    std::cout << "Decompressed expected size: " << decompressed_size << std::endl;
+    std::cout << "dimesions: " << height << " * " << width << std::endl;
     std::cout << "loading file " << path_to_image << " continuing" << std::endl;
-    unfilterScanlines(image_data, width, height, 4);
-    
+    unfilterScanlines(decompressed_data, width, height, 4);
+    std::cout << "loading file " << path_to_image << " continuing" << std::endl;
     auto png_image = std::make_unique<PNGImage>(height, width);
     for (uint32_t y = 0; y < height; ++y) {
         for (uint32_t x = 0; x < width; ++x) {
-            uint8_t r = image_data[(y * width + x) * 4 + 0];
-            uint8_t g = image_data[(y * width + x) * 4 + 1];
-            uint8_t b = image_data[(y * width + x) * 4 + 2];
-            uint8_t a = image_data[(y * width + x) * 4 + 3];
+            size_t i = y * (width * 4 + 1) + 1 + x * 4;
+            uint8_t r = decompressed_data[i + 0];
+            uint8_t g = decompressed_data[i + 1];
+            uint8_t b = decompressed_data[i + 2];
+            uint8_t a = decompressed_data[i + 3];
             png_image->setPixelColor(Color(r, g, b, a), x, y);
         }
     }

@@ -10,10 +10,10 @@ int main() {
     std::cout << "Program started!" << std::endl;
     std::unique_ptr<Image> image = ImageLoader::load("../output/png1.png");
 
-
-    for(int row = 0; row < 54; row++){
-        for(int col = 0; col < 45; col++){
-            image->setPixelColor(Color(23, 34, 234, 255), col, row);
+    std::cout << "Changing image!" << std::endl;
+    for(int row = 43; row < 54; row++){
+        for(int col = 32; col < 54; col++){
+            image->setPixelColor(Color(24, 21, 43, 255), col, row);
         }
     }
 
