@@ -2,7 +2,7 @@
 
 std::unique_ptr<Image> JPEGImage::load(const std::string &path_to_image){
     std::cout << path_to_image << std::endl;
-    return nullptr;
+    throw std::runtime_error("JPEGImage::load is not implemented yet.");
 }
 
 void JPEGImage::setPixelColor(Color new_color, int pos_x, int pos_y) {
@@ -24,6 +24,7 @@ Color JPEGImage::getPixelColor(int pos_x, int pos_y) const {
 
 void JPEGImage::save(const std::string &path_to_folder) const {
     std::cout << path_to_folder << std::endl;
+    throw std::runtime_error("JPEGImage::load is not implemented yet.");
 }
 
 JPEGImage::~JPEGImage(){

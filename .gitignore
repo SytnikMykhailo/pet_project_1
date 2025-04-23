@@ -4,3 +4,4 @@ output.txt
 output/
 build/
 zlib/
+*.dll
