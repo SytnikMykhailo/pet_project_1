@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <winsock2.h>
-#include "../errors/errors.h"
 #include <signal.h>
 #include <vector>
 #include "database.hpp"
