@@ -1,4 +1,4 @@
-#include "client.h"
+#include "../headers/client.h"
 #include <iostream>
 #include <string>
 #include <winsock2.h>
@@ -13,13 +13,13 @@ void Client::setup() {
     wVersionRequested = MAKEWORD(2, 2);
     int err = WSAStartup(wVersionRequested, &wsaData);
     if (err != 0) {
-        error("Error initializing winsock dll", 10);
+        std::cout << "Error initializing winsock dll: 10" << std::endl;
     }
 
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == INVALID_SOCKET) {
         WSACleanup();
-        error("Error creating socket", 10);
+        std::cout << "Error creating socket: 10" << std::endl;
     }
 
     mode = 1;
@@ -33,7 +33,7 @@ void Client::setup() {
 void Client::connect_to_server() {
     int result = ::connect(socket_fd, (struct sockaddr*)&server_address, sizeof(server_address));
     if (result == SOCKET_ERROR) {
-        error("Connection to server failed", 10);
+        std::cout << "Connection to server failed: " << 10 << std::endl;
     }
     std::cout << "Connected to server" << std::endl;
 }
@@ -67,12 +67,12 @@ Client::~Client() {
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        error("Usage: client <IP> <PORT>", 10);
+        std::cout << "Usage: client <IP> <PORT>: " << 10 << std::endl;
     }
 
     int port = atoi(argv[2]);
     if (port < 1024 || port > 49151) {
-        error("Invalid port number", 10);
+        std::cout << "Invalid  port number: 10" << std::endl;
     }
 
     Client client(port, sizeof(sockaddr_in), argv[1]);

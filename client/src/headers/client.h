@@ -1,7 +1,6 @@
 #include <iostream>
 #include <winsock2.h>
 #include <vector>
-#include "../errors/errors.h"
 
 class Client {
 public:
