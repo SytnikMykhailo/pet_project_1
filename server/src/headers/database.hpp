@@ -21,6 +21,6 @@ public:
         return db;
     }
 private:
-    sqlite3 *db;
+    sqlite3 *db = nullptr;
     const char *name;
 };

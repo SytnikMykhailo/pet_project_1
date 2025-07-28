@@ -6,8 +6,6 @@
 #include <vector>
 #include "database.hpp"
 
-void handle_signal(int signal);
-
 class Server{
 public:
     Server() = default;
@@ -20,7 +18,7 @@ public:
     }
     ~Server();
 private:
-    Database db;
+    Database *db;
     SOCKET socket_fd;
     int port;
     struct sockaddr_in server_address;

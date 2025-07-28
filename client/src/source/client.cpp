@@ -55,30 +55,12 @@ void Client::run() {
     while (true) {
         std::cout << "Enter message to send: ";
         std::getline(std::cin, message);
-        if (message == "exit") break;
         send_message(message);
+        if (message == "exit") break;
     }
 }
 
 Client::~Client() {
     closesocket(socket_fd);
     WSACleanup();
-}
-
-int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cout << "Usage: client <IP> <PORT>: " << 10 << std::endl;
-    }
-
-    int port = atoi(argv[2]);
-    if (port < 1024 || port > 49151) {
-        std::cout << "Invalid  port number: 10" << std::endl;
-    }
-
-    Client client(port, sizeof(sockaddr_in), argv[1]);
-    client.setup();
-    client.connect_to_server();
-    client.run();
-
-    return 0;
 }

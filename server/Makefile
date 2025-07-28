@@ -11,7 +11,7 @@ LDFLAGS = -pthread -mconsole -Lsrc/external_libraries/lib -lsqlite3 -lws2_32
 #    COPY_DLL = cp external_libraries/sqlite/bin/sqlite3.dll ./
 #endif
 
-program: myNoiseGeneratorServer.o server.o database.o
+program: myNoiseGeneratorServer.o server.o database.o hash_table.o
 	$(CXX) $^ -o $@ $(LDFLAGS)
 	$(COPY_DLL)
 
@@ -22,6 +22,9 @@ server.o: src/source/server.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 database.o: src/source/database.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+hash_table.o: src/source/hash_table.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
