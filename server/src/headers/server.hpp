@@ -14,7 +14,7 @@ public:
     Server(int port, int addrlen, int opt, char *ip);
     void run();
     void setup();
-    friend void handle_signal(int signal);
+    friend BOOL WINAPI ConsoleHandler(DWORD signal);
     sockaddr_in get_server_address(){
         return server_address;
     }

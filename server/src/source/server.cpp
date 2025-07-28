@@ -1,15 +1,5 @@
 #include "../headers/server.hpp"
 
-Server *server = nullptr;
-
-void handle_signal(int signum) {
-    std::cout << "Signal: " << signum << std::endl;
-    closesocket(server->socket_fd);
-    WSACleanup();
-    free(server);
-    exit(EXIT_SUCCESS);
-}
-
 Server::~Server(){
     WSACleanup();
     closesocket(socket_fd);
@@ -50,7 +40,6 @@ void Server::setup(){
         std::cerr << "Error listening socket" << std::endl;
         return;
     }
-    signal(SIGTERM, handle_signal);
 }
 
 void Server::run(){
@@ -108,22 +97,3 @@ void Server::run(){
         }
     }
 }
-
-/*int main(int argc, char **argv) {
-    if(argc != 3){
-        std::cerr << "Wrong number of arguments" << std::endl;
-        return -1;
-    }
-    int port = atoi(argv[1]);
-    if(port < 1024 || port > 49151){
-        std::cerr << "Wrong port number" << std::endl;
-        return -1;
-    }
-    server = new Server(port, sizeof(sockaddr_in), 1, argv[2]);
-    std::cout << "Server created" << std::endl;
-    server->setup();
-    std::cout << "Server running" << std::endl;
-    server->run();
-    free(server);
-    return 0;
-}*/
