@@ -109,15 +109,15 @@ void Server::run(){
     }
 }
 
-int main(int argc, char **argv) {
+/*int main(int argc, char **argv) {
     if(argc != 3){
         std::cerr << "Wrong number of arguments" << std::endl;
-        return;
+        return -1;
     }
     int port = atoi(argv[1]);
     if(port < 1024 || port > 49151){
         std::cerr << "Wrong port number" << std::endl;
-        return;
+        return -1;
     }
     server = new Server(port, sizeof(sockaddr_in), 1, argv[2]);
     std::cout << "Server created" << std::endl;
@@ -126,4 +126,4 @@ int main(int argc, char **argv) {
     server->run();
     free(server);
     return 0;
-}
+}*/

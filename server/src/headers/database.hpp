@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <sqlite3.h>
+#include "../external_libraries/sqlite3.h"
 
 class Database{
 public:
