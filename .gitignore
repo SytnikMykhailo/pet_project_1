@@ -5,3 +5,5 @@ output/
 build/
 zlib/
 *.dll
+lib/
+build_sqlite/

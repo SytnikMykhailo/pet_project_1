@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Wall -Werror -W -Iexternal_libraries
-LDFLAGS = -pthread -mconsole -Lexternal_libraries/lib -lsqlite3
+LDFLAGS = -pthread -mconsole -Lexternal_libraries/lib -lsqlite3 -lws2_32
 
 
 ifeq ($(OS),Windows_NT)

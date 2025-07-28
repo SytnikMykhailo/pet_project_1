@@ -1,7 +1,4 @@
-#include "database.h"
-#include <iostream>
-#include <string>
-#include "../sqlite3.h"
+#include "../headers/database.hpp"
 
 Database::Database(const char *name){
     this->name = name;
