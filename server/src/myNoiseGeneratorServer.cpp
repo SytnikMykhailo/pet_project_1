@@ -1,6 +1,6 @@
 #include <iostream>
 #include "headers/server.hpp"
-
+#include "headers/threaded_server.hpp"
 
 Server *server = nullptr;
 
@@ -17,7 +17,8 @@ BOOL WINAPI ConsoleHandler(DWORD signal) {
     return TRUE;
 }
 
-int main(int argc, char** argv){
+
+/*int main(int argc, char** argv){
     if(argc == 4) return 1;
 
     if (!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
@@ -36,6 +37,22 @@ int main(int argc, char** argv){
     std::cout << "Server created" << std::endl;
     server->setup();
     std::cout << "Server running" << std::endl;
+    server->run();
+    delete server;
+    return 0;
+}*/
+
+int main(int argc, char** argv){
+    if(argc != 3){
+        std::cout << "Usage: " << argv[0] << " <port> <ip>" << std::endl;
+        return -1;
+    }
+    
+    server = new ThreadedServer(atoi(argv[1]), sizeof(struct sockaddr_in), 1, argv[2]);
+    server->setup();
+    
+    SetConsoleCtrlHandler(ConsoleHandler, TRUE);
+    
     server->run();
     delete server;
     return 0;

@@ -59,6 +59,8 @@
         "optional": "cpp",
         "random": "cpp",
         "ratio": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

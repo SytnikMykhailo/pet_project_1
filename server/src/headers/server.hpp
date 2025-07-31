@@ -11,13 +11,13 @@ class Server{
 public:
     Server() = default;
     Server(int port, int addrlen, int opt, char *ip);
-    void run();
+    virtual void run();
     void setup();
     friend BOOL WINAPI ConsoleHandler(DWORD signal);
     sockaddr_in get_server_address(){
         return server_address;
     }
-    ~Server();
+    virtual ~Server();
 
     struct ClientState {
         enum State { 
@@ -42,9 +42,10 @@ private:
     bool handle_login_data(SOCKET s, const std::string& data, ClientState& state);
     void generate_and_queue_image(SOCKET s, ClientState& state);
 
-private:
-    Database *db;
+protected:
     SOCKET socket_fd;
+    Database *db;
+private:
     int port;
     struct sockaddr_in server_address;
     int addrlen;

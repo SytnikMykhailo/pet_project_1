@@ -8,7 +8,7 @@
 #include <map>
 #include <iostream>
 #include <cstdint>
-#include <cstring>     // Додаємо для memcpy
+#include <cstring>
 
 
 std::map<SOCKET, Server::ClientState> client_states;
@@ -78,7 +78,6 @@ void Server::run() {
         for (SOCKET s : client_sockets) {
             FD_SET(s, &readfds);
             
-            // Додаємо в writefds якщо потрібно відправити дані
             auto it = client_states.find(s);
             if (it != client_states.end() && 
                 (it->second.state == ClientState::SENDING_IMAGE_HEADER || 
@@ -93,7 +92,7 @@ void Server::run() {
 
         struct timeval timeout;
         timeout.tv_sec = 0;
-        timeout.tv_usec = 100000; // 100ms timeout
+        timeout.tv_usec = 100000;
 
         int activity = select(0, &readfds, &writefds, NULL, &timeout);
         if (activity == SOCKET_ERROR) {
@@ -101,7 +100,6 @@ void Server::run() {
             break;
         }
 
-        // Обробка нових підключень
         if (FD_ISSET(socket_fd, &readfds)) {
             SOCKET client_socket = accept(socket_fd, NULL, NULL);
             if (client_socket != INVALID_SOCKET) {
@@ -112,11 +110,9 @@ void Server::run() {
             }
         }
 
-        // Обробка даних від клієнтів
         for (int i = 0; i < (int)client_sockets.size(); ++i) {
             SOCKET s = client_sockets[i];
             
-            // Читання даних
             if (FD_ISSET(s, &readfds)) {
                 if (handle_client_read(s)) {
                     std::cout << "Client " << s << " disconnected" << std::endl;
@@ -128,7 +124,6 @@ void Server::run() {
                 }
             }
             
-            // Відправка даних
             if (FD_ISSET(s, &writefds)) {
                 handle_client_write(s);
             }
@@ -144,13 +139,13 @@ bool Server::handle_client_read(SOCKET s) {
         int err_code = WSAGetLastError();
         if (err_code != WSAEWOULDBLOCK) {
             std::cerr << "Recv error: " << err_code << std::endl;
-            return true; // Відключити клієнта
+            return true;
         }
         return false;
     }
 
     if (bytes_received == 0) {
-        return true; // Клієнт відключився
+        return true;
     }
 
     buf[bytes_received] = '\0';
@@ -158,16 +153,13 @@ bool Server::handle_client_read(SOCKET s) {
     
     ClientState& state = client_states[s];
     
-    // Додаємо дані до буфера
     state.buffer += data;
     
-    // Обробляємо повні повідомлення (розділені \n)
     size_t pos;
     while ((pos = state.buffer.find('\n')) != std::string::npos) {
         std::string message = state.buffer.substr(0, pos);
         state.buffer.erase(0, pos + 1);
         
-        // Видаляємо \r якщо є
         if (!message.empty() && message.back() == '\r') {
             message.pop_back();
         }
@@ -175,7 +167,7 @@ bool Server::handle_client_read(SOCKET s) {
         std::cout << "Message from " << s << ": '" << message << "'" << std::endl;
         
         if (handle_message_stateful(s, message)) {
-            return true; // Відключити клієнта
+            return true;
         }
     }
     
@@ -186,9 +178,8 @@ void Server::handle_client_write(SOCKET s) {
     ClientState& state = client_states[s];
     
     if (state.state == ClientState::SENDING_IMAGE_HEADER) {
-        // Відправляємо заголовок зображення (розміри)
         const char* header_data = reinterpret_cast<const char*>(state.image_data.data()) + state.bytes_sent;
-        size_t remaining = 8 - state.bytes_sent; // 4 bytes width + 4 bytes height
+        size_t remaining = 8 - state.bytes_sent;
         
         int sent = send(s, header_data, remaining, 0);
         if (sent > 0) {
@@ -237,7 +228,7 @@ bool Server::handle_command(SOCKET s, const std::string& message, ClientState& s
     if (message == "exit") {
         const char* msg = "Goodbye!\n";
         send(s, msg, strlen(msg), 0);
-        return true; // Відключити клієнта
+        return true;
     }
     else if (message == "register") {
         const char* msg = "Send email,password,name,surname,note separated by commas:\n";
@@ -284,7 +275,6 @@ bool Server::handle_registration_data(SOCKET s, const std::string& data, ClientS
         std::getline(iss, surname, ',') &&
         std::getline(iss, note)) {
         
-        // Видаляємо зайві пробіли
         email.erase(email.find_last_not_of(" \n\r\t") + 1);
         password.erase(password.find_last_not_of(" \n\r\t") + 1);
         name.erase(name.find_last_not_of(" \n\r\t") + 1);
@@ -361,7 +351,6 @@ void Server::generate_and_queue_image(SOCKET s, ClientState& state) {
     memcpy(state.image_data.data(), &w, sizeof(w));
     memcpy(state.image_data.data() + 4, &h, sizeof(h));
     
-    // Генеруємо піксельні дані
     uint8_t* pixels = state.image_data.data() + 8;
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
@@ -382,6 +371,5 @@ void Server::generate_and_queue_image(SOCKET s, ClientState& state) {
     state.state = ClientState::SENDING_IMAGE_HEADER;
     state.bytes_sent = 0;
     
-    // Використовуємо параметр s, щоб уникнути warning
     std::cout << "Generated image for client " << s << std::endl;
 }
