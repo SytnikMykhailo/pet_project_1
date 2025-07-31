@@ -17,6 +17,9 @@ public:
         return server_address;
     }
     ~Server();
+
+private:
+    void handle_message();
 private:
     Database *db;
     SOCKET socket_fd;

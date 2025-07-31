@@ -20,6 +20,10 @@ public:
     sqlite3* get_db(){
         return db;
     }
+
+    inline const char* get_db_name() const{
+        return name;
+    }
 private:
     sqlite3 *db = nullptr;
     const char *name;

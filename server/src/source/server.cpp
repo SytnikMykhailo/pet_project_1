@@ -1,5 +1,7 @@
 #include "../headers/server.hpp"
 #include "../headers/hash_table.hpp"
+#include <filesystem>
+
 
 Server::~Server(){
     WSACleanup();
@@ -42,13 +44,23 @@ void Server::setup(){
         std::cerr << "Error listening socket" << std::endl;
         return;
     }
+
+    if (!std::filesystem::exists(db->get_db_name())) {
+        std::cout << "Database file not found. Creating database and table..." << std::endl;
+        Database::create_db(db->get_db_name());
+
+        db->open_db(db->get_db_name());
+        db->create_table();
+    } else {
+        db->open_db(db->get_db_name());
+    }
 }
 
 void Server::run() {
     std::vector<SOCKET> client_sockets;
     fd_set readfds;
 
-    HashTable<std::string> connectedUsers;
+    HashTable<SOCKET> connectedUsers;
 
     while (true) {
         FD_ZERO(&readfds);
@@ -106,7 +118,7 @@ void Server::run() {
 
                 std::string message(buf, bytes_received);
                 std::cout << "Message received: " << message << std::endl;
-
+                
                 if (message == "exit") {
                     closesocket(s);
                     client_sockets.erase(client_sockets.begin() + i);
@@ -117,4 +129,12 @@ void Server::run() {
             }
         }
     }
+}
+
+void Server::handle_message(){
+    //register
+    //login
+    //logout
+    //exit
+    //get image
 }

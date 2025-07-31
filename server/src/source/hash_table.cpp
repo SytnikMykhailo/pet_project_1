@@ -1,5 +1,6 @@
 #include "../headers/hash_table.hpp"
 
+#include <winsock2.h>
 #include <limits>
 #include <cstdint>
 
@@ -120,3 +121,4 @@ HashTable<T>::~HashTable() {
 
 
 template class HashTable<char>;
+template class HashTable<SOCKET>;

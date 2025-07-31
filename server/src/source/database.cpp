@@ -20,7 +20,7 @@ void Database::open_db(const char *name){
 
 void Database::create_table(){
     const char *sql = "CREATE TABLE USERS ("
-                      "ID INTEGER PRIMARY KEY AUTOINCREMENT,"  // Автоінкремент для ID
+                      "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
                       "EMAIL TEXT NOT NULL,"
                       "PASSWORD TEXT NOT NULL,"
                       "NAME TEXT NOT NULL,"
@@ -36,15 +36,15 @@ void Database::create_table(){
 }
 
 int Database::callback(void *data, int argc, char **argv, char **azColName){
-    int *id = static_cast<int*>(data);  // Cast the data to an int pointer
+    int *id = static_cast<int*>(data);
     for(int i = 0; i < argc; i++){
         if (std::string(azColName[i]) == "ID") {
-            *id = std::atoi(argv[i]);  // Set the ID when found
+            *id = std::atoi(argv[i]);
         }
         std::cout << azColName[i] << " = " << (argv[i] ? argv[i] : "NULL") << " ";
     }
     std::cout << std::endl;
-    return 0;  // Success
+    return 0;
 }
 
 void Database::delete_table(){
