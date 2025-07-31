@@ -10,7 +10,13 @@ public:
     void send_message(const std::string& message);
     void run();
     ~Client();
+    void get_image();
 
+private:
+    void handle_registration();
+    void handle_login();
+    std::string receive_response();
+    bool receive_exact(char* buffer, size_t size);
 private:
     SOCKET socket_fd;
     struct sockaddr_in server_address;
