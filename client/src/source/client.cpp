@@ -32,7 +32,6 @@ void Client::setup() {
         return;
     }
 
-    // Повертаємо неблокуючий режим
     u_long mode = 1;
     ioctlsocket(socket_fd, FIONBIO, &mode);
 
@@ -50,7 +49,7 @@ void Client::connect_to_server() {
 }
 
 void Client::send_message(const std::string& message) {
-    std::string msg_with_newline = message + "\n";  // Додаємо \n
+    std::string msg_with_newline = message + "\n";
     int send_result = send(socket_fd, msg_with_newline.c_str(), msg_with_newline.size(), 0);
     if (send_result == SOCKET_ERROR) {
         std::cerr << "Send message failed" << std::endl;
@@ -77,10 +76,9 @@ void Client::run() {
         } else {
             send_message(command);
             
-            // Правильна обробка неблокуючого режиму
             bool response_received = false;
             int attempts = 0;
-            const int max_attempts = 100; // 10 секунд з інтервалом 100мс
+            const int max_attempts = 100;
             
             while (!response_received && attempts < max_attempts) {
                 int bytes_received = recv(socket_fd, buf, sizeof(buf) - 1, 0);
@@ -91,7 +89,6 @@ void Client::run() {
                     std::cout << "Server: " << response << std::endl;
                     response_received = true;
                     
-                    // Обробка додаткових запитів
                     if (command == "register" && response.find("Send email") != std::string::npos) {
                         handle_registration();
                     } else if (command == "login" && response.find("Send email") != std::string::npos) {
@@ -100,7 +97,7 @@ void Client::run() {
                 } else if (bytes_received == SOCKET_ERROR) {
                     int error = WSAGetLastError();
                     if (error == WSAEWOULDBLOCK) {
-                        Sleep(100); // Чекаємо 100мс
+                        Sleep(100);
                         attempts++;
                     } else {
                         std::cerr << "Recv error: " << error << std::endl;
@@ -136,10 +133,9 @@ void Client::handle_registration() {
     
     std::string data = email + "," + password + "," + name + "," + surname + "," + note;
     
-    Sleep(200); // Додаємо затримку для синхронізації
+    Sleep(200);
     send_message(data);
     
-    // Обробка неблокуючого режиму
     char buf[1024];
     bool response_received = false;
     int attempts = 0;
@@ -173,10 +169,9 @@ void Client::handle_login() {
     
     std::string data = email + "," + password;
     
-    Sleep(200); // Додаємо затримку для синхронізації
+    Sleep(200);
     send_message(data);
     
-    // Обробка неблокуючого режиму
     char buf[1024];
     bool response_received = false;
     int attempts = 0;
@@ -204,7 +199,6 @@ void Client::handle_login() {
 void Client::get_image() {
     send_message("get image");
 
-    // Отримуємо розміри з неблокуючим режимом
     uint32_t width = 0, height = 0;
     
     int received = 0;
@@ -249,7 +243,6 @@ void Client::get_image() {
 
     std::cout << "Image size: " << width << "x" << height << std::endl;
 
-    // Отримуємо пікселі з неблокуючим режимом
     std::vector<uint8_t> raw_pixels(width * height * 4);
     received = 0;
     while (received < (int)raw_pixels.size()) {
@@ -271,7 +264,6 @@ void Client::get_image() {
         }
     }
 
-    // Отримуємо повідомлення "Image sent" з неблокуючим режимом
     char buf[1024];
     bool msg_received = false;
     int attempts = 0;

@@ -17,17 +17,15 @@ void ThreadedServer::run() {
     std::cout << "Starting threaded server..." << std::endl;
     
     while (running) {
-        // Очищуємо завершені потоки
         cleanup_finished_threads();
         
-        // Чекаємо нових клієнтів
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(socket_fd, &readfds);
         
         struct timeval timeout;
         timeout.tv_sec = 0;
-        timeout.tv_usec = 100000; // 100ms
+        timeout.tv_usec = 100000;
         
         int activity = select(0, &readfds, nullptr, nullptr, &timeout);
         if (activity == SOCKET_ERROR) {
@@ -40,7 +38,6 @@ void ThreadedServer::run() {
         if (FD_ISSET(socket_fd, &readfds)) {
             SOCKET client_socket = accept(socket_fd, nullptr, nullptr);
             if (client_socket != INVALID_SOCKET) {
-                // Створюємо новий потік для клієнта
                 std::lock_guard<std::mutex> lock(threads_mutex);
                 client_threads[client_socket] = std::thread(
                     &ThreadedServer::handle_client_thread, this, client_socket
@@ -50,7 +47,6 @@ void ThreadedServer::run() {
         }
     }
     
-    // Чекаємо завершення всіх потоків
     std::lock_guard<std::mutex> lock(threads_mutex);
     for (auto& [socket, thread] : client_threads) {
         if (thread.joinable()) {
@@ -64,10 +60,8 @@ void ThreadedServer::run() {
 void ThreadedServer::handle_client_thread(SOCKET client_socket) {
     std::cout << "Thread started for client " << client_socket << std::endl;
     
-    // Створюємо локальний стан клієнта для цього потоку
     ClientState local_state;
     
-    // Встановлюємо блокуючий режим для цього клієнта
     u_long mode = 0;
     ioctlsocket(client_socket, FIONBIO, &mode);
     
@@ -75,7 +69,6 @@ void ThreadedServer::handle_client_thread(SOCKET client_socket) {
     
     try {
         while (running) {
-            // Встановлюємо таймаут для recv
             struct timeval timeout;
             timeout.tv_sec = 1;
             timeout.tv_usec = 0;
@@ -87,7 +80,7 @@ void ThreadedServer::handle_client_thread(SOCKET client_socket) {
             if (bytes_received == SOCKET_ERROR) {
                 int error = WSAGetLastError();
                 if (error == WSAETIMEDOUT) {
-                    continue; // Таймаут - продовжуємо
+                    continue;
                 }
                 std::cout << "Client " << client_socket << " recv error: " << error << std::endl;
                 break;
@@ -102,7 +95,6 @@ void ThreadedServer::handle_client_thread(SOCKET client_socket) {
             std::string data(buf, bytes_received);
             local_state.buffer += data;
             
-            // Обробляємо всі повні повідомлення
             size_t pos;
             while ((pos = local_state.buffer.find('\n')) != std::string::npos) {
                 std::string message = local_state.buffer.substr(0, pos);
@@ -114,9 +106,8 @@ void ThreadedServer::handle_client_thread(SOCKET client_socket) {
                 
                 std::cout << "Thread for client " << client_socket << " received: '" << message << "'" << std::endl;
                 
-                // ВИКОРИСТОВУЄМО local_state замість глобального
                 if (handle_message_threaded(client_socket, message, local_state)) {
-                    goto disconnect; // exit або помилка
+                    goto disconnect;
                 }
             }
         }
@@ -128,7 +119,6 @@ disconnect:
     std::cout << "Thread for client " << client_socket << " finishing" << std::endl;
     closesocket(client_socket);
     
-    // Видаляємо потік із списку
     {
         std::lock_guard<std::mutex> lock(threads_mutex);
         finished_threads.push_back(std::this_thread::get_id());
@@ -136,7 +126,6 @@ disconnect:
 }
 
 bool ThreadedServer::handle_message_threaded(SOCKET s, const std::string& message, ClientState& state) {
-    // Перевіряємо стан клієнта
     if (state.state == ClientState::WAITING_REGISTER_DATA) {
         handle_registration_data_threaded(s, message);
         state.state = ClientState::IDLE;
@@ -157,7 +146,6 @@ bool ThreadedServer::handle_message_threaded(SOCKET s, const std::string& messag
         const char* msg = "Send email,password,name,surname,note separated by commas:\n";
         send(s, msg, strlen(msg), 0);
         
-        // Встановлюємо стан очікування даних (НЕ читаємо одразу)
         state.state = ClientState::WAITING_REGISTER_DATA;
         return false;
     }
@@ -165,7 +153,6 @@ bool ThreadedServer::handle_message_threaded(SOCKET s, const std::string& messag
         const char* msg = "Send email,password separated by comma:\n";
         send(s, msg, strlen(msg), 0);
         
-        // Встановлюємо стан очікування даних (НЕ читаємо одразу)
         state.state = ClientState::WAITING_LOGIN_DATA;
         return false;
     }
@@ -202,8 +189,7 @@ void ThreadedServer::handle_registration_data_threaded(SOCKET s, const std::stri
         std::getline(iss, name, ',') &&
         std::getline(iss, surname, ',') &&
         std::getline(iss, note)) {
-        
-        // Видаляємо зайві пробіли
+
         email.erase(email.find_last_not_of(" \n\r\t") + 1);
         password.erase(password.find_last_not_of(" \n\r\t") + 1);
         name.erase(name.find_last_not_of(" \n\r\t") + 1);
@@ -276,15 +262,12 @@ void ThreadedServer::handle_login_data_threaded(SOCKET s, const std::string& dat
 void ThreadedServer::generate_and_send_image_threaded(SOCKET s) {
     const int width = 64, height = 64;
     
-    // Створюємо буфер для зображення
     std::vector<uint8_t> image_data(8 + width * height * 4);
     
-    // Записуємо розміри
     uint32_t w = width, h = height;
     memcpy(image_data.data(), &w, sizeof(w));
     memcpy(image_data.data() + 4, &h, sizeof(h));
     
-    // Генеруємо пікселі
     uint8_t* pixels = image_data.data() + 8;
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
@@ -302,7 +285,6 @@ void ThreadedServer::generate_and_send_image_threaded(SOCKET s) {
         }
     }
     
-    // Відправляємо все зображення за один раз (блокуючий режим)
     size_t sent = 0;
     while (sent < image_data.size()) {
         int chunk = send(s, reinterpret_cast<const char*>(image_data.data() + sent), 

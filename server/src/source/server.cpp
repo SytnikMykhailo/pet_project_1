@@ -343,10 +343,8 @@ bool Server::handle_login_data(SOCKET s, const std::string& data, ClientState& s
 void Server::generate_and_queue_image(SOCKET s, ClientState& state) {
     const int width = 64, height = 64;
     
-    // Підготовка буфера: 8 байт заголовок + піксельні дані
     state.image_data.resize(8 + width * height * 4);
     
-    // Записуємо розміри у заголовок
     uint32_t w = width, h = height;
     memcpy(state.image_data.data(), &w, sizeof(w));
     memcpy(state.image_data.data() + 4, &h, sizeof(h));

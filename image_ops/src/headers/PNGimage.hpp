@@ -6,7 +6,7 @@
 #pragma pack(push, 1)
 
 typedef struct {
-    uint8_t bytes[8];  // 89 50 4E 47 0D 0A 1A 0A
+    uint8_t bytes[8];
     bool isValid() const {
         const uint8_t expected[8] = {137, 80, 78, 71, 13, 10, 26, 10};
         return std::equal(std::begin(bytes), std::end(bytes), expected);

@@ -185,16 +185,14 @@ void PNGImage::save(const std::string &path_to_file) const {
         return;
     }
 
-    // PNG Signature
     uint8_t signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
     out.write(reinterpret_cast<char*>(signature), sizeof(signature));
 
-    // Prepare IHDR chunk
     PNGIHDR ihdr;
     ihdr.width = htonl(width);
     ihdr.height = htonl(height);
     ihdr.bit_depth = 8;
-    ihdr.color_type = 6;  // RGBA
+    ihdr.color_type = 6;
     ihdr.compression_method = 0;
     ihdr.filter_method = 0;
     ihdr.interlace_method = 0;
@@ -213,10 +211,9 @@ void PNGImage::save(const std::string &path_to_file) const {
     uint32_t ihdr_crc_be = htonl(ihdr_crc);
     out.write(reinterpret_cast<char*>(&ihdr_crc_be), sizeof(ihdr_crc_be));
 
-    // Prepare raw image data with filter bytes
     std::vector<uint8_t> raw_data;
     for (int y = 0; y < height; ++y) {
-        raw_data.push_back(0); // No filter
+        raw_data.push_back(0);
         for (int x = 0; x < width; ++x) {
             const Color& c = pixels[y * width + x];
             raw_data.push_back(c.getRed());
@@ -226,7 +223,6 @@ void PNGImage::save(const std::string &path_to_file) const {
         }
     }
 
-    // Compress image data
     uLongf compressed_size = compressBound(raw_data.size());
     std::vector<uint8_t> compressed_data(compressed_size);
     if (compress(compressed_data.data(), &compressed_size, raw_data.data(), raw_data.size()) != Z_OK) {
@@ -247,7 +243,6 @@ void PNGImage::save(const std::string &path_to_file) const {
     uint32_t idat_crc_be = htonl(idat_crc);
     out.write(reinterpret_cast<char*>(&idat_crc_be), sizeof(idat_crc_be));
 
-    // IEND chunk
     uint32_t iend_len_be = htonl(0);
     out.write(reinterpret_cast<char*>(&iend_len_be), sizeof(iend_len_be));
 
