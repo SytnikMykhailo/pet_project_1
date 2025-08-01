@@ -56,13 +56,16 @@ cd server/
 make dependencies  # Build SQLite3
 make               # Compile server
 ./program.exe <port> <ip>
-
-Client Build 
+```
+#### Client Build 
+```sh
 cd client/
 make              # Compile client
 ./program.exe <port> <ip>
+```
 
-Image Processing Library
+#### Image Processing Library
+```sh
 cd image_ops/
 make dependencies  # Build zlib
 make              # Compile library
